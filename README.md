@@ -3,3 +3,5 @@
 
 Any questions should be made to the corresponding author Msc Willian Alber da Silva Farias (willian.alber@hotmail.com).
 
+The script is available.
+
