@@ -22,10 +22,12 @@ def webscraping():
     url_base =  'https://www.nature.com/search?q=' #default url that will be generated on all searches
     
     material_name = data.replace(' ', '%20') #Swap space for site default character
-
+    
+    print('What do you want to search for in the articles? '+data) #base search input
+    print("Enter a keyword that you want to know is contained in the articles: "+keyword) #keyword that will judge the articles
     print('Website accessed: ', url_base + material_name) #Link created and accessed
     print('\n')
-    print('Below is the list of articles. Data obtained: Title, Authors, DOI, Description, Publication Date, Abstract, Citation (if any).')
+    print('Below is the list of articles. Data obtained: Title, Authors, DOI, Description, Publication Date, Abstract, Citation, Subjects.')
 
     url_final = url_base + material_name #Final url
     
@@ -70,11 +72,74 @@ def webscraping():
             print('\n')    
                 
             if(author):
-                print('Author(s) of the article: '+ author.get_text().strip()) #Author print                                     
+                   
+                authors_article = author.get_text().strip()
+                
+                def separate_comma(authors_article):
+                    resultado = []
+                    palavra_atual = ""
+
+                    for i, char in enumerate(authors_article):
+                        if char.isupper():
+                            if i > 0 and i < len(authors_article) - 1 and authors_article[i - 1].islower() and authors_article[i + 1].islower():
+                                if palavra_atual:
+                                    resultado.append(palavra_atual)
+                                palavra_atual = char
+                            else:
+                                palavra_atual += char
+                        else:
+                            palavra_atual += char
+
+                    if palavra_atual:
+                        resultado.append(palavra_atual)
+
+                    return "".join(resultado)                
+                
+                # Imprimir os elementos separados por vírgula
+                elementos_separados = separate_comma(authors_article)              
+               
+            
+                authors_article_separate =  elementos_separados
+                print("Authors:")
+                    
+                print(authors_article_separate) #Print subjects, if there is  
+                
             else:
                 author = news_item.find('ul', attrs={'class':"c-author-list c-author-list--compact"})#Author search
                 if(author):
-                    print('Author(s) of the article: '+ author.get_text().strip()) 
+                    authors_article = author.get_text().strip()
+                    
+                    def separate_comma(authors_article):
+                        resultado = []
+                        palavra_atual = ""
+
+                        for i, char in enumerate(authors_article):
+                            if char.isupper():
+                                if i > 0 and i < len(authors_article) - 1 and authors_article[i - 1].islower() and authors_article[i + 1].islower():
+                                    if palavra_atual:
+                                        resultado.append(palavra_atual)
+                                    palavra_atual = char
+                                else:
+                                    palavra_atual += char
+                            else:
+                                palavra_atual += char
+
+                        if palavra_atual:
+                            resultado.append(palavra_atual)
+
+                        return "".join(resultado)
+                    
+
+                    # Imprimir os elementos separados por vírgula
+                    elementos_separados = separate_comma(authors_article)              
+               
+            
+                    authors_article_separate =  elementos_separados
+                    print("Authors:")
+                    
+                    print(authors_article_separate) #Print subjects, if there is
+                    
+                   
                 else:
                     print('Author(s) of the article: Not Found.')
         
@@ -108,7 +173,9 @@ def webscraping():
             soup2 = BeautifulSoup(response2.text, 'html.parser') #Website conversion
             abstract= soup2.find('div', class_="c-article-section__content", id="Abs1-content") #Search for abstract
             citation = soup2.find('p', attrs={'class':"c-bibliographic-information__citation"})
+            subjects = soup2.find('ul', attrs={'class':"c-article-subject-list"})#Search for subjects, if there is.
     
+            
             if soup2.find('a', attrs={'data-track-action':"publication date"}): #Search for publication date, if there is.
                 datepubli= soup2.find('a', attrs={'data-track-action':"publication date"}).get_text().strip()
                 date_article = datepubli[11:]
@@ -165,6 +232,41 @@ def webscraping():
                 
             print('\n')
             
+            if(subjects): 
+                subjects_article = subjects.get_text().strip()
+                
+                def separate_comma(subjects_article):
+                    resultado = []
+                    palavra_atual = ""
+
+                    for char in subjects_article:
+                        if char.isupper():
+                            if palavra_atual:
+                                resultado.append(palavra_atual)
+                            palavra_atual = char
+                        else:
+                            palavra_atual += char
+
+                    if palavra_atual:
+                        resultado.append(palavra_atual)
+
+                    return ", ".join(resultado)
+
+                # Imprimir os elementos separados por vírgula
+                elementos_separados = separate_comma(subjects_article)
+                
+                
+                subjects_article_separate =  elementos_separados
+                print("Subjects:")
+                
+                print(subjects_article_separate) #Print subjects, if there is
+                
+            else:
+                subjects_article_separate = "Not Found"
+                print("Subjects: "+ subjects_article_separate) #citation not found
+                
+            print('\n')
+            
             if keyword in soup2.get_text().strip(): #Evaluation if the article has the user's keyword
                 print("PROMISING ARTICLE, results were found for "+ keyword+".")
                 analysis = "Promising"
@@ -176,7 +278,7 @@ def webscraping():
             print("____________________________________________________________________________________________________________________________")
             print('\n')
             
-            news_data.append({'Title': title_article, 'DOI': DOI_article, 'Publication Date': date_article,'Link': url_article, 'Citation': citation_article, 'Evaluation': analysis})
+            news_data.append({'Title': title_article,'Subjects': subjects_article_separate, 'DOI': DOI_article, 'Publication Date': date_article,'Link': url_article, 'Citation': citation_article, 'Evaluation': analysis})
        
     # Creating a DataFrame with the collected information
     df = pd.DataFrame(news_data)
